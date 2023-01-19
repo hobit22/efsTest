@@ -1,5 +1,7 @@
 package com.test.efs.efstest;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.juli.logging.LogFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,17 +14,23 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@Slf4j
 public class UploadService {
 
-    public static final String SHARED = "/resource/static/shared";
-    public static final String EFS = "/efs/upload";
+    public static final String SHARED = "/mnt/efs/fs1/resource/static/shared";
+    public static final String EFS = "/mnt/efs/fs1";
 
     public List<Map<String, Object>> uploadResource(MultipartFile[] files) throws IOException {
         String currentDateString = getCurrentDate();
 
         File targetDir = new File(SHARED, currentDateString);
+        log.info("File name {}" , targetDir.getName());
         if (!targetDir.exists()) {
-            if (!targetDir.mkdirs()) throw new RuntimeException();
+            log.info("targetDir.exists() {}", targetDir.exists());
+            if (!targetDir.mkdirs()) {
+                log.info("targetDir.mkdirs() fail");
+                throw new RuntimeException();
+            }
         }
 
         List<Map<String, Object>> resInfoList = new ArrayList<>();
@@ -80,16 +88,29 @@ public class UploadService {
         String upload_relPath = uploadUri.substring(SHARED.length());
         File uploadFile = new File(SHARED, upload_relPath);
 
-        String rsc_relPath = "/" + uploadFile.getName().substring(0, 2) +
-                "/" + uploadFile.getName().substring(2, 4) +
-                "/" + uploadFile.getName();
+        log.info("uploadFile name {}", uploadFile.getName());
+        log.info("uploadFile path {}", uploadFile.getPath());
+
+//        String rsc_relPath = "/" + uploadFile.getName().substring(0, 2) +
+//                "/" + uploadFile.getName().substring(2, 4) +
+//                "/" + uploadFile.getName();
+
+        String rsc_relPath = "/" + uploadFile.getName();
+
         File rscFile = new File(EFS + rsc_relPath);
+
+        log.info("rscFile name {}", rscFile.getName());
+        log.info("rscFile path {}", rscFile.getPath());
 
         File rscDir = rscFile.getParentFile();
         rscDir.getParentFile().setWritable(true, false);
         if (!rscDir.exists()) {
+            log.info("rscDir.exists() {}", rscDir.exists());
             boolean res = rscDir.mkdirs();
-            if (!res) throw new RuntimeException();
+            if (!res) {
+                log.info("rscDir.mkdirs() fail");
+                throw new RuntimeException();
+            }
         }
 
         uploadFile.renameTo(rscFile);

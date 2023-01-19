@@ -23,4 +23,10 @@ public class UploadController {
     public void moveFile(@RequestBody String url) {
         uploadService.moveFile(url);
     }
+
+    @GetMapping("/test")
+    public String test() {
+        return "ok";
+    }
+
 }
